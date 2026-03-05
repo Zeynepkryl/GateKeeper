@@ -23,7 +23,6 @@ import androidx.compose.material.icons.outlined.Autorenew
 import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
@@ -48,7 +47,6 @@ import com.zeynep.gatekeeper.presentation.scanner.ScannerViewModel.Companion.REQ
 import com.zeynep.gatekeeper.ui.theme.GateKeeperTheme
 import com.zeynep.gatekeeper.util.DateFormatter
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScannerScreen(
     uiState: ScannerUiState,
@@ -138,7 +136,7 @@ private fun StatusSection(uiState: ScannerUiState) {
             )
         }
 
-        if (uiState.isAutoRetrying) {
+        if (uiState.isAutoRetrying && uiState.hasError) {
             Spacer(modifier = Modifier.height(GateKeeperTheme.spacing.sm))
             GKText(
                 text = stringResource(R.string.scanner_auto_retrying, uiState.retryAttempt + 1),

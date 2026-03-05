@@ -19,6 +19,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
+/**
+ * Converts the callback-based [BiometricSdkWrapper] into reactive Kotlin Flows.
+ *
+ * Key safety guarantees:
+ * - [isListenerActive] flag prevents stale callbacks after [disconnect].
+ * - [connect] removes any previously registered listener before adding a new one,
+ *   guarding against the SDK's [java.util.concurrent.CopyOnWriteArrayList] allowing
+ *   duplicate registrations.
+ * - The blocking [BiometricSdkWrapper.initializeAndConnect] is dispatched to [ioDispatcher].
+ */
 class BiometricRepositoryImpl @Inject constructor(
     private val sdkWrapper: BiometricSdkWrapper,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher
@@ -54,6 +64,7 @@ class BiometricRepositoryImpl @Inject constructor(
     }
 
     override suspend fun connect() {
+        sdkWrapper.removeListener(sdkListener)
         isListenerActive = true
         sdkWrapper.addListener(sdkListener)
         withContext(ioDispatcher) {

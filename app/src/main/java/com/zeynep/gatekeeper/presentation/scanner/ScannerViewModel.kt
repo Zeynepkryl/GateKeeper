@@ -22,6 +22,19 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.math.pow
 
+/**
+ * Orchestrates the biometric scanning flow, managing hardware connection
+ * lifecycle, real-time data collection, and navigation events.
+ *
+ * Key responsibilities:
+ * - Bridges domain use cases to the UI layer via [ScannerUiState].
+ * - Tracks [REQUIRED_CONSECUTIVE_PACKETS] successful readings to trigger navigation.
+ * - Implements exponential backoff auto-retry on hardware failures.
+ * - Ensures hardware cleanup in [onCleared] to prevent listener leaks.
+ *
+ * Navigation events are emitted through a [Channel] to guarantee
+ * exactly-once delivery, avoiding re-navigation on recomposition.
+ */
 @HiltViewModel
 class ScannerViewModel @Inject constructor(
     private val connectScanner: ConnectScannerUseCase,
@@ -45,25 +58,25 @@ class ScannerViewModel @Inject constructor(
         collectErrors()
     }
 
-    fun startScan() {
+    fun startScan() = performScan(autoRetry = false)
+
+    fun retry() = performScan(autoRetry = false)
+
+    fun startScanWithAutoRetry() = performScan(autoRetry = true)
+
+    private fun performScan(autoRetry: Boolean) {
         autoRetryJob?.cancel()
+        disconnectScanner()
         _uiState.update {
             it.copy(
                 errorMessage = null,
                 consecutiveCount = 0,
                 receivedPackets = emptyList(),
-                isAutoRetrying = false,
+                isAutoRetrying = autoRetry,
                 retryAttempt = 0
             )
         }
         viewModelScope.launch { connectScanner() }
-    }
-
-    fun retry() = startScan()
-
-    fun startScanWithAutoRetry() {
-        _uiState.update { it.copy(isAutoRetrying = true, retryAttempt = 0) }
-        startScan()
     }
 
     private fun collectConnectionState() {
@@ -119,6 +132,11 @@ class ScannerViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Schedules a reconnection attempt with exponential backoff.
+     * Delays: 1s → 2s → 4s, capped at [MAX_RETRY_DELAY_MS].
+     * Gives up after [MAX_RETRY_ATTEMPTS] and shows the manual Retry button.
+     */
     private fun scheduleRetry() {
         val attempt = _uiState.value.retryAttempt
         if (attempt >= MAX_RETRY_ATTEMPTS) {

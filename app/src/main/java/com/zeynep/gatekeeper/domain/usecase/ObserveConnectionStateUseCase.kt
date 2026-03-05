@@ -5,6 +5,7 @@ import com.zeynep.gatekeeper.domain.repository.BiometricRepository
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
+/** Observes the current [ConnectionState] of the biometric hardware. */
 class ObserveConnectionStateUseCase @Inject constructor(
     private val repository: BiometricRepository
 ) {

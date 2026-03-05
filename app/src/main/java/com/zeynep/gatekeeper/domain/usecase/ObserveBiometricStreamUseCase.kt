@@ -5,6 +5,7 @@ import com.zeynep.gatekeeper.domain.repository.BiometricRepository
 import kotlinx.coroutines.flow.SharedFlow
 import javax.inject.Inject
 
+/** Provides a reactive stream of [BiometricReading] packets from the sensor. */
 class ObserveBiometricStreamUseCase @Inject constructor(
     private val repository: BiometricRepository
 ) {
