@@ -1,11 +1,83 @@
 package com.zeynep.gatekeeper.ui.theme
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+@Immutable
+data class GKColors(
+    val primary: Color,
+    val primaryVariant: Color,
+    val primaryContainer: Color,
+    val onPrimary: Color,
+    val onPrimaryContainer: Color,
+    val secondary: Color,
+    val onSecondary: Color,
+    val background: Color,
+    val surface: Color,
+    val surfaceVariant: Color,
+    val textPrimary: Color,
+    val textSecondary: Color,
+    val textHint: Color,
+    val statusReady: Color,
+    val statusError: Color,
+    val statusConnecting: Color,
+    val statusDisconnected: Color,
+    val success: Color,
+    val onSuccess: Color,
+    val error: Color,
+    val onError: Color,
+    val errorContainer: Color,
+    val divider: Color,
+)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+internal val LightGKColors = GKColors(
+    primary = Color(0xFF1B2A4A),
+    primaryVariant = Color(0xFF2D4373),
+    primaryContainer = Color(0xFFDDE3ED),
+    onPrimary = Color.White,
+    onPrimaryContainer = Color(0xFF1B2A4A),
+    secondary = Color(0xFF00ACC1),
+    onSecondary = Color.White,
+    background = Color(0xFFF8F9FB),
+    surface = Color.White,
+    surfaceVariant = Color(0xFFEEF1F5),
+    textPrimary = Color(0xFF1B2A4A),
+    textSecondary = Color(0xFF6B7B8D),
+    textHint = Color(0xFF9EACBA),
+    statusReady = Color(0xFF43A047),
+    statusError = Color(0xFFE53935),
+    statusConnecting = Color(0xFFFFB300),
+    statusDisconnected = Color(0xFF90A4AE),
+    success = Color(0xFF43A047),
+    onSuccess = Color.White,
+    error = Color(0xFFE53935),
+    onError = Color.White,
+    errorContainer = Color(0xFFFFEBEE),
+    divider = Color(0xFFE0E4E8),
+)
+
+internal val DarkGKColors = GKColors(
+    primary = Color(0xFF5B8DEF),
+    primaryVariant = Color(0xFF3D6BC9),
+    primaryContainer = Color(0xFF1B2A4A),
+    onPrimary = Color.White,
+    onPrimaryContainer = Color(0xFFDDE3ED),
+    secondary = Color(0xFF4DD0E1),
+    onSecondary = Color(0xFF121212),
+    background = Color(0xFF121212),
+    surface = Color(0xFF1E1E1E),
+    surfaceVariant = Color(0xFF2C2C2C),
+    textPrimary = Color(0xFFE8ECF1),
+    textSecondary = Color(0xFF90A4AE),
+    textHint = Color(0xFF607D8B),
+    statusReady = Color(0xFF66BB6A),
+    statusError = Color(0xFFEF5350),
+    statusConnecting = Color(0xFFFFD54F),
+    statusDisconnected = Color(0xFF78909C),
+    success = Color(0xFF66BB6A),
+    onSuccess = Color(0xFF121212),
+    error = Color(0xFFEF5350),
+    onError = Color.White,
+    errorContainer = Color(0xFF4E1A1A),
+    divider = Color(0xFF37474F),
+)
