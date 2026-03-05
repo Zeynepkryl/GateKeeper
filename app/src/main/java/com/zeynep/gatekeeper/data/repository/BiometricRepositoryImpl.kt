@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -23,11 +25,14 @@ import javax.inject.Inject
  * Converts the callback-based [BiometricSdkWrapper] into reactive Kotlin Flows.
  *
  * Key safety guarantees:
+ * - [sdkMutex] serializes [connect] calls, preventing concurrent SDK initialization
+ *   which would start multiple internal data-stream threads.
  * - [isListenerActive] flag prevents stale callbacks after [disconnect].
- * - [connect] removes any previously registered listener before adding a new one,
- *   guarding against the SDK's [java.util.concurrent.CopyOnWriteArrayList] allowing
- *   duplicate registrations.
- * - The blocking [BiometricSdkWrapper.initializeAndConnect] is dispatched to [ioDispatcher].
+ * - Post-connect race guard: if [disconnect] is called while the blocking SDK
+ *   operation is in progress, the orphaned connection is cleaned up immediately
+ *   after the SDK call returns.
+ * - [runCatching] wraps the SDK call defensively against unexpected exceptions
+ *   that the legacy driver's own error handling may not cover.
  */
 class BiometricRepositoryImpl @Inject constructor(
     private val sdkWrapper: BiometricSdkWrapper,
@@ -42,6 +47,8 @@ class BiometricRepositoryImpl @Inject constructor(
 
     private val _errors = MutableSharedFlow<String>(extraBufferCapacity = 16)
     override val errors: SharedFlow<String> = _errors.asSharedFlow()
+
+    private val sdkMutex = Mutex()
 
     @Volatile
     private var isListenerActive = false
@@ -64,11 +71,22 @@ class BiometricRepositoryImpl @Inject constructor(
     }
 
     override suspend fun connect() {
-        sdkWrapper.removeListener(sdkListener)
-        isListenerActive = true
-        sdkWrapper.addListener(sdkListener)
-        withContext(ioDispatcher) {
-            sdkWrapper.initializeAndConnect()
+        sdkMutex.withLock {
+            sdkWrapper.removeListener(sdkListener)
+            isListenerActive = true
+            sdkWrapper.addListener(sdkListener)
+
+            withContext(ioDispatcher) {
+                runCatching { sdkWrapper.initializeAndConnect() }
+                    .onFailure { e ->
+                        _connectionState.value = ConnectionState.Error
+                        _errors.tryEmit(e.message ?: "Unknown error")
+                    }
+            }
+
+            if (!isListenerActive) {
+                sdkWrapper.disconnect()
+            }
         }
     }
 

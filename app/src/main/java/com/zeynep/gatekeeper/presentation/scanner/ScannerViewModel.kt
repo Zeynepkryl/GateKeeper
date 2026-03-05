@@ -9,6 +9,9 @@ import com.zeynep.gatekeeper.domain.usecase.DisconnectScannerUseCase
 import com.zeynep.gatekeeper.domain.usecase.ObserveBiometricStreamUseCase
 import com.zeynep.gatekeeper.domain.usecase.ObserveConnectionStateUseCase
 import com.zeynep.gatekeeper.domain.usecase.ObserveErrorsUseCase
+import com.zeynep.gatekeeper.presentation.scanner.ScannerViewModel.Companion.MAX_RETRY_ATTEMPTS
+import com.zeynep.gatekeeper.presentation.scanner.ScannerViewModel.Companion.MAX_RETRY_DELAY_MS
+import com.zeynep.gatekeeper.presentation.scanner.ScannerViewModel.Companion.REQUIRED_CONSECUTIVE_PACKETS
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -30,6 +33,8 @@ import kotlin.math.pow
  * - Bridges domain use cases to the UI layer via [ScannerUiState].
  * - Tracks [REQUIRED_CONSECUTIVE_PACKETS] successful readings to trigger navigation.
  * - Implements exponential backoff auto-retry on hardware failures.
+ * - Cancels in-flight [connectJob] before starting a new connection to prevent
+ *   overlapping SDK calls.
  * - Ensures hardware cleanup in [onCleared] to prevent listener leaks.
  *
  * Navigation events are emitted through a [Channel] to guarantee
@@ -50,6 +55,7 @@ class ScannerViewModel @Inject constructor(
     private val _events = Channel<ScannerEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
+    private var connectJob: Job? = null
     private var autoRetryJob: Job? = null
 
     init {
@@ -66,6 +72,7 @@ class ScannerViewModel @Inject constructor(
 
     private fun performScan(autoRetry: Boolean) {
         autoRetryJob?.cancel()
+        connectJob?.cancel()
         disconnectScanner()
         _uiState.update {
             it.copy(
@@ -76,7 +83,7 @@ class ScannerViewModel @Inject constructor(
                 retryAttempt = 0
             )
         }
-        viewModelScope.launch { connectScanner() }
+        connectJob = viewModelScope.launch { connectScanner() }
     }
 
     private fun collectConnectionState() {
@@ -85,6 +92,7 @@ class ScannerViewModel @Inject constructor(
                 _uiState.update { current ->
                     current.copy(
                         connectionState = state,
+                        errorMessage = if (state == ConnectionState.Error) current.errorMessage else null,
                         consecutiveCount = if (state == ConnectionState.Error) 0
                         else current.consecutiveCount
                     )
@@ -101,7 +109,8 @@ class ScannerViewModel @Inject constructor(
             observeBiometricStream().collect { reading ->
                 _uiState.update { current ->
                     current.copy(
-                        receivedPackets = current.receivedPackets + reading,
+                        receivedPackets = (current.receivedPackets + reading)
+                            .takeLast(MAX_UI_PACKETS),
                         consecutiveCount = current.consecutiveCount + 1
                     )
                 }
@@ -125,6 +134,7 @@ class ScannerViewModel @Inject constructor(
 
     private fun handleScanComplete(packets: List<BiometricReading>) {
         autoRetryJob?.cancel()
+        connectJob?.cancel()
         disconnectScanner()
         _uiState.update { ScannerUiState() }
         viewModelScope.launch {
@@ -134,7 +144,7 @@ class ScannerViewModel @Inject constructor(
 
     /**
      * Schedules a reconnection attempt with exponential backoff.
-     * Delays: 1s → 2s → 4s, capped at [MAX_RETRY_DELAY_MS].
+     * Delays: 1s -> 2s -> 4s, capped at [MAX_RETRY_DELAY_MS].
      * Gives up after [MAX_RETRY_ATTEMPTS] and shows the manual Retry button.
      */
     private fun scheduleRetry() {
@@ -149,14 +159,16 @@ class ScannerViewModel @Inject constructor(
                 .coerceAtMost(MAX_RETRY_DELAY_MS)
             delay(delayMs)
             _uiState.update { it.copy(retryAttempt = attempt + 1) }
+            connectJob?.cancel()
             disconnectScanner()
-            connectScanner()
+            connectJob = viewModelScope.launch { connectScanner() }
         }
     }
 
     override fun onCleared() {
         super.onCleared()
         autoRetryJob?.cancel()
+        connectJob?.cancel()
         disconnectScanner()
     }
 
@@ -170,5 +182,6 @@ class ScannerViewModel @Inject constructor(
         private const val INITIAL_RETRY_DELAY_MS = 1000L
         private const val MAX_RETRY_DELAY_MS = 16000L
         private const val BACKOFF_FACTOR = 2.0
+        private const val MAX_UI_PACKETS = 100
     }
 }

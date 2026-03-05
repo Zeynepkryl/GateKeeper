@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -158,5 +159,58 @@ class ScannerViewModelTest {
         coEvery { connectScanner() } returns Unit
         viewModel.retry()
         io.mockk.coVerify { connectScanner() }
+    }
+
+
+    @Test
+    fun `error message is cleared when connection recovers`() = runTest {
+        errorsFlow.emit("Sensor disconnected unexpectedly")
+        assertEquals("Sensor disconnected unexpectedly", viewModel.uiState.value.errorMessage)
+
+        connectionStateFlow.value = ConnectionState.Ready
+        assertNull(viewModel.uiState.value.errorMessage)
+    }
+
+    @Test
+    fun `startScanWithAutoRetry preserves auto-retry flag`() = runTest {
+        coEvery { connectScanner() } returns Unit
+        viewModel.startScanWithAutoRetry()
+        assertTrue(viewModel.uiState.value.isAutoRetrying)
+    }
+
+    @Test
+    fun `startScan does not set auto-retry flag`() = runTest {
+        coEvery { connectScanner() } returns Unit
+        viewModel.startScan()
+        assertFalse(viewModel.uiState.value.isAutoRetrying)
+    }
+
+    @Test
+    fun `performScan disconnects before connecting`() = runTest {
+        coEvery { connectScanner() } returns Unit
+        viewModel.startScan()
+
+        io.mockk.verifyOrder {
+            disconnectScanner()
+
+        }
+    }
+
+    @Test
+    fun `navigation event is exactly-once even with extra packets`() = runTest {
+        connectionStateFlow.value = ConnectionState.Ready
+
+        val events = mutableListOf<ScannerViewModel.ScannerEvent>()
+        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.events.collect { events.add(it) }
+        }
+
+        repeat(5) { i ->
+            biometricStreamFlow.emit(BiometricReading("BIO_DATA_$i", i.toLong()))
+        }
+
+        assertEquals(1, events.size)
+
+        job.cancel()
     }
 }
