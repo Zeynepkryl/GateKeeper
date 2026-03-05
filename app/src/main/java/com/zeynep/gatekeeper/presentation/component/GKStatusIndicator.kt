@@ -19,8 +19,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.zeynep.gatekeeper.R
 import com.zeynep.gatekeeper.domain.model.ConnectionState
 import com.zeynep.gatekeeper.ui.theme.GateKeeperTheme
 
@@ -87,9 +89,17 @@ fun GKStatusIndicator(
         if (showLabel) {
             Spacer(modifier = Modifier.width(6.dp))
             GKText(
-                text = state.displayName,
+                text = state.toDisplayString(),
                 style = GateKeeperTheme.typography.titleMedium,
             )
         }
     }
+}
+
+@Composable
+private fun ConnectionState.toDisplayString(): String = when (this) {
+    ConnectionState.Disconnected -> stringResource(R.string.status_disconnected)
+    ConnectionState.Connecting -> stringResource(R.string.status_connecting)
+    ConnectionState.Ready -> stringResource(R.string.status_ready)
+    ConnectionState.Error -> stringResource(R.string.status_error)
 }

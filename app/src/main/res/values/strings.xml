@@ -1,6 +1,12 @@
 <resources>
     <string name="app_name">GateKeeper</string>
 
+    <!-- Connection Status -->
+    <string name="status_disconnected">Disconnected</string>
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_ready">Ready</string>
+    <string name="status_error">Error</string>
+
     <!-- Scanner Screen -->
     <string name="scanner_title">Gate Entry Scanner</string>
     <string name="scanner_start">Start Scanner</string>
