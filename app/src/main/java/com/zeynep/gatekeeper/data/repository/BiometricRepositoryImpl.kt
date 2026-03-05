@@ -80,7 +80,7 @@ class BiometricRepositoryImpl @Inject constructor(
                 runCatching { sdkWrapper.initializeAndConnect() }
                     .onFailure { e ->
                         _connectionState.value = ConnectionState.Error
-                        _errors.tryEmit(e.message ?: "Unknown error")
+                        _errors.tryEmit(e.message ?: FALLBACK_ERROR_MESSAGE)
                     }
             }
 
@@ -95,5 +95,9 @@ class BiometricRepositoryImpl @Inject constructor(
         sdkWrapper.removeListener(sdkListener)
         sdkWrapper.disconnect()
         _connectionState.value = ConnectionState.Disconnected
+    }
+
+    private companion object {
+        const val FALLBACK_ERROR_MESSAGE = "Unknown hardware error"
     }
 }
