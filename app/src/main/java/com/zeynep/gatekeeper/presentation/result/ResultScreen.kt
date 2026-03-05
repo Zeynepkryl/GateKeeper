@@ -34,8 +34,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.zeynep.gatekeeper.R
 import com.zeynep.gatekeeper.domain.model.BiometricReading
 import com.zeynep.gatekeeper.presentation.component.GKCard
 import com.zeynep.gatekeeper.presentation.component.GKPrimaryButton
@@ -75,7 +77,7 @@ fun ResultScreen(
                         )
                         Spacer(modifier = Modifier.width(spacing.sm))
                         GKText(
-                            text = "Access Granted",
+                            text = stringResource(R.string.result_title),
                             style = GateKeeperTheme.typography.titleLarge,
                             color = GateKeeperTheme.colors.onPrimary,
                         )
@@ -111,7 +113,7 @@ fun ResultScreen(
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Outlined.CheckCircle,
-                        contentDescription = "Success",
+                        contentDescription = stringResource(R.string.result_success_description),
                         modifier = Modifier.size(48.dp),
                         tint = GateKeeperTheme.colors.onPrimary,
                     )
@@ -119,13 +121,13 @@ fun ResultScreen(
             }
 
             GKText(
-                text = "Verification Successful",
+                text = stringResource(R.string.result_verification_successful),
                 style = GateKeeperTheme.typography.headlineMedium,
                 textAlign = TextAlign.Center,
             )
 
             GKText(
-                text = "${packets.size} biometric packets verified",
+                text = stringResource(R.string.result_packets_verified, packets.size),
                 style = GateKeeperTheme.typography.bodyMedium,
                 color = GateKeeperTheme.colors.textSecondary,
             )
@@ -134,7 +136,7 @@ fun ResultScreen(
 
             GKCard {
                 GKText(
-                    text = "Verified Packets",
+                    text = stringResource(R.string.result_verified_packets),
                     style = GateKeeperTheme.typography.titleMedium,
                 )
                 Spacer(modifier = Modifier.height(spacing.sm))
@@ -153,7 +155,7 @@ fun ResultScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             GKPrimaryButton(
-                text = "Finish",
+                text = stringResource(R.string.result_finish),
                 onClick = onFinish,
                 modifier = Modifier.fillMaxWidth(),
                 leadingIcon = Icons.Outlined.CheckCircle,

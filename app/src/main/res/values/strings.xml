@@ -1,3 +1,22 @@
 <resources>
     <string name="app_name">GateKeeper</string>
+
+    <!-- Scanner Screen -->
+    <string name="scanner_title">Gate Entry Scanner</string>
+    <string name="scanner_start">Start Scanner</string>
+    <string name="scanner_connecting">Connecting…</string>
+    <string name="scanner_retry">Retry</string>
+    <string name="scanner_auto_retry">Auto-Retry</string>
+    <string name="scanner_auto_retrying">Auto-retrying… (attempt %d)</string>
+    <string name="scanner_consecutive_packets">Consecutive Packets</string>
+    <string name="scanner_packet_progress">%1$d / %2$d</string>
+    <string name="scanner_received_data">Received Data</string>
+
+    <!-- Result Screen -->
+    <string name="result_title">Access Granted</string>
+    <string name="result_success_description">Success</string>
+    <string name="result_verification_successful">Verification Successful</string>
+    <string name="result_packets_verified">%d biometric packets verified</string>
+    <string name="result_verified_packets">Verified Packets</string>
+    <string name="result_finish">Finish</string>
 </resources>

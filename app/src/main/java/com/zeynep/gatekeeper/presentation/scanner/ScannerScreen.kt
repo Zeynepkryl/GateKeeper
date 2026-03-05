@@ -34,7 +34,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.zeynep.gatekeeper.R
 import com.zeynep.gatekeeper.domain.model.BiometricReading
 import com.zeynep.gatekeeper.domain.model.ConnectionState
 import com.zeynep.gatekeeper.presentation.component.GKCard
@@ -69,7 +71,7 @@ fun ScannerScreen(
                         )
                         Spacer(modifier = Modifier.width(spacing.sm))
                         GKText(
-                            text = "Gate Entry Scanner",
+                            text = stringResource(R.string.scanner_title),
                             style = GateKeeperTheme.typography.titleLarge,
                             color = GateKeeperTheme.colors.onPrimary,
                         )
@@ -139,7 +141,7 @@ private fun StatusSection(uiState: ScannerUiState) {
         if (uiState.isAutoRetrying) {
             Spacer(modifier = Modifier.height(GateKeeperTheme.spacing.sm))
             GKText(
-                text = "Auto-retrying... (attempt ${uiState.retryAttempt + 1})",
+                text = stringResource(R.string.scanner_auto_retrying, uiState.retryAttempt + 1),
                 style = GateKeeperTheme.typography.bodySmall,
                 color = GateKeeperTheme.colors.textSecondary,
             )
@@ -161,13 +163,13 @@ private fun ActionButtons(
         when {
             uiState.hasError && !uiState.isAutoRetrying -> {
                 GKPrimaryButton(
-                    text = "Retry",
+                    text = stringResource(R.string.scanner_retry),
                     onClick = onRetry,
                     modifier = Modifier.weight(1f),
                     leadingIcon = Icons.Outlined.Refresh,
                 )
                 GKOutlinedButton(
-                    text = "Auto-Retry",
+                    text = stringResource(R.string.scanner_auto_retry),
                     onClick = onStartAutoRetry,
                     modifier = Modifier.weight(1f),
                     leadingIcon = Icons.Outlined.Autorenew,
@@ -176,7 +178,7 @@ private fun ActionButtons(
 
             uiState.canStartScan -> {
                 GKPrimaryButton(
-                    text = "Start Scanner",
+                    text = stringResource(R.string.scanner_start),
                     onClick = onStartScan,
                     modifier = Modifier.fillMaxWidth(),
                     leadingIcon = Icons.Outlined.PlayArrow,
@@ -185,7 +187,7 @@ private fun ActionButtons(
 
             uiState.isConnecting -> {
                 GKPrimaryButton(
-                    text = "Connecting...",
+                    text = stringResource(R.string.scanner_connecting),
                     onClick = {},
                     modifier = Modifier.fillMaxWidth(),
                     isLoading = true,
@@ -203,11 +205,15 @@ private fun ProgressSection(consecutiveCount: Int) {
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             GKText(
-                text = "Consecutive Packets",
+                text = stringResource(R.string.scanner_consecutive_packets),
                 style = GateKeeperTheme.typography.bodyMedium,
             )
             GKText(
-                text = "$consecutiveCount / $REQUIRED_CONSECUTIVE_PACKETS",
+                text = stringResource(
+                    R.string.scanner_packet_progress,
+                    consecutiveCount,
+                    REQUIRED_CONSECUTIVE_PACKETS
+                ),
                 style = GateKeeperTheme.typography.titleSmall,
                 color = GateKeeperTheme.colors.secondary,
             )
@@ -239,7 +245,7 @@ private fun PacketList(
 
     Column(modifier = modifier) {
         GKText(
-            text = "Received Data",
+            text = stringResource(R.string.scanner_received_data),
             style = GateKeeperTheme.typography.titleSmall,
             modifier = Modifier.padding(bottom = GateKeeperTheme.spacing.xs),
         )
